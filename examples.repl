@@ -1,0 +1,31 @@
+create_individual 1000000 127.0.0.1 ru-RU
+get_individuals
+update_individual 1 1000000 192.0.2.1 ru-RU
+create_individual 999519 192.0.2.2 en-US
+create_query 1000000 "SELECT 1" 1 0
+get_queries
+update_query 1 1000000 "SELECT 2" 1 1
+create_query 1000000 "old individual" 2 0
+create_query 1000000 "without completion" 1 0
+create_completion 1000000 "2" done "" 1 0
+get_completions
+update_completion 1 1000000 "2" failed "test error" 1 1
+create_completion 1000000 "" failed "old error" 2 0
+select_recent_completions 1000000
+delete_individual 1
+delete_query 1
+create_individual abc 127.0.0.1 ru-RU
+create_query 1000000 test 999 0
+update_completion 999 1000000 "" done "" 1 0
+delete_completion 999
+delete_completion 1
+delete_completion 2
+delete_query 1
+delete_query 2
+delete_query 3
+delete_individual 1
+delete_individual 2
+get_individuals
+get_queries
+get_completions
+exit
