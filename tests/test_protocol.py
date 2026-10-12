@@ -10,8 +10,8 @@ from src import protocol
 JSON = st.recursive(
     st.one_of(st.none(), st.booleans(), st.integers(), st.text()),
     lambda children: st.one_of(st.lists(children, max_size=5),
-                              st.dictionaries(st.text(), children,
-                                              max_size=5)),
+                               st.dictionaries(st.text(), children,
+                                               max_size=5)),
     max_leaves=15,
 )
 
@@ -24,7 +24,7 @@ def test_request_layout(operation, arguments):
     assert frame[:4] == len(body).to_bytes(4, "little")
     assert frame[4:6] == int(operation).to_bytes(2, "little")
     assert protocol.decode_request_header(frame[:6]) == (operation,
-                                                        len(body))
+                                                         len(body))
     assert protocol.parse_request(body) == arguments
 
 
@@ -35,7 +35,7 @@ def test_response_layout(operation, value):
     assert frame[:1] == int(operation).to_bytes(1, "little")
     assert frame[1:5] == len(body).to_bytes(4, "little")
     assert protocol.decode_response_header(frame[:5]) == (len(body),
-                                                         int(operation))
+                                                          int(operation))
     assert protocol.parse_response(frame[5:]) == value
 
 
@@ -53,7 +53,7 @@ def test_unknown_operation(code):
 
 
 @given(size=st.integers(min_value=protocol.MAX_BODY + 1,
-                      max_value=4294967295))
+                        max_value=4294967295))
 def test_oversized_header(size):
     with pytest.raises(protocol.ProtocolError):
         protocol.decode_request_header(struct.pack("<IH", size, 1))
