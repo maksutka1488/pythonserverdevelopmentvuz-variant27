@@ -53,6 +53,7 @@ def test_config(directory, test_mode):
     return (
         '[auth]\nusername = "tester"\npassword = "secret"\n'
         f'[service]\noutput_dir = "{directory / "png"}"\n'
+        f'database = "{directory / "records.json"}"\n'
         f'workers = 1\ntimeout = 10\ntest_mode = {boolean}\n'
         'max_xml_bytes = 8192\n'
     )

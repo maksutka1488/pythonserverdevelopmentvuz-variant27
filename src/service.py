@@ -34,6 +34,18 @@ class Service:
         self.active = {}
         self.next_completion = 1
 
+    def resume(self):
+        """Восстановить счётчик и запустить сохранённые задания."""
+        with self.lock:
+            self.next_completion = 1 + max(
+                (row["identifier"] for row in self.store.all(COMPLETION)),
+                default=0,
+            )
+            for row in self.store.all(QUERY):
+                if row["handled"] == PENDING:
+                    self._drop_completions(row["identifier"])
+                    self._schedule(row)
+
     def close(self):
         """Дождаться обработчиков перед закрытием хранилища."""
         self.executor.shutdown(wait=True)

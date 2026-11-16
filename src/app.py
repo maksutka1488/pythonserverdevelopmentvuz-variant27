@@ -10,14 +10,14 @@ from werkzeug.exceptions import HTTPException
 from .jobs import Renderer
 from .routes import api
 from .service import Service, ServiceError
-from .store import MemoryStore
+from .store import TinyStore
 from .xml_api import error_xml
 
 UNAUTHORIZED = 401
 
 
 def create_app(config_path="config.toml"):
-    """Загрузить TOML и создать HTTP API с хранилищем в памяти."""
+    """Загрузить TOML и создать HTTP API с файловой базой TinyDB."""
     with Path(config_path).open("rb") as stream:
         config = tomllib.load(stream)
     settings = config["service"]
@@ -27,10 +27,13 @@ def create_app(config_path="config.toml"):
         API_PASSWORD=config["auth"]["password"],
         MAX_CONTENT_LENGTH=settings["max_xml_bytes"],
     )
-    app.extensions["jobs"] = Service(
-        MemoryStore(), Renderer(settings["test_mode"], settings["timeout"]),
+    store = TinyStore(settings["database"])
+    jobs = Service(
+        store, Renderer(settings["test_mode"], settings["timeout"]),
         Path(settings["output_dir"]).resolve(), settings["workers"],
     )
+    jobs.resume()
+    app.extensions["jobs"] = jobs
     app.register_blueprint(api)
     app.before_request(authenticate)
     app.register_error_handler(ServiceError, service_error)

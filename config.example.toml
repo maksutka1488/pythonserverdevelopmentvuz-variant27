@@ -3,6 +3,7 @@ username = "demo"
 password = "demo"
 
 [service]
+database = "data/records.json"
 output_dir = "data/png"
 workers = 2
 timeout = 30

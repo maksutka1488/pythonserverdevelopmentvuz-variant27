@@ -1,33 +1,41 @@
-"""Интерфейс хранения записей и реализация в памяти."""
+"""Слой доступа к файловой базе TinyDB."""
+
+from pathlib import Path
+
+from tinydb import TinyDB
+from tinydb.table import Document
 
 INDIVIDUAL = "individual"
 QUERY = "query"
 COMPLETION = "completion"
-TABLES = (INDIVIDUAL, QUERY, COMPLETION)
 
 
-class MemoryStore:
-    """Хранит записи по идентификатору; возвращает отдельные копии."""
+class TinyStore:
+    """Открывает таблицы TinyDB и адаптирует их к операциям Service."""
 
-    def __init__(self):
-        self.tables = {name: {} for name in TABLES}
+    def __init__(self, path):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self.db = TinyDB(path, ensure_ascii=False, indent=2)
 
     def get(self, table, identifier):
-        """Вернуть запись или None."""
-        row = self.tables[table].get(identifier)
+        """Вернуть копию документа по ID или None."""
+        row = self.db.table(table).get(doc_id=identifier + 1)
         return dict(row) if row is not None else None
 
     def all(self, table):
-        """Вернуть копии всех записей."""
-        return [dict(row) for row in self.tables[table].values()]
+        """Вернуть копии документов таблицы."""
+        return [dict(row) for row in self.db.table(table).all()]
 
     def put(self, table, row):
-        """Добавить или заменить запись по её identifier."""
-        self.tables[table][row["identifier"]] = dict(row)
+        """Сохранить документ; смещение даёт ID TinyDB от единицы."""
+        document = Document(row, doc_id=row["identifier"] + 1)
+        self.db.table(table).upsert(document)
 
     def delete(self, table, identifier):
-        """Удалить существующую запись."""
-        del self.tables[table][identifier]
+        """Удалить документ по ID."""
+        self.db.table(table).remove(doc_ids=[identifier + 1])
 
     def close(self):
-        """Реализация в памяти не держит открытые файлы."""
+        """Закрыть файл TinyDB."""
+        self.db.close()
