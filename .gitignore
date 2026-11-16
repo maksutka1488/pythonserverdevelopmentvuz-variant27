@@ -1,11 +1,11 @@
 .venv/
 __pycache__/
-*.py[cod]
 .pytest_cache/
 .hypothesis/
+.ruff_cache/
 .coverage
 htmlcov/
-journal.log
+data/
+*.png
+config.toml
 .DS_Store
-.idea/
-.vscode/
