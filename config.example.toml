@@ -1,0 +1,10 @@
+[auth]
+username = "demo"
+password = "demo"
+
+[service]
+output_dir = "data/png"
+workers = 2
+timeout = 30
+test_mode = false
+max_xml_bytes = 8192
