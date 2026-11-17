@@ -14,7 +14,10 @@ from src.client import ApiClient, ApiError
 from tests.support import RunningServer
 
 NOW = 10_000
-TIMES = st.sampled_from((NOW - 481, NOW - 480, NOW - 479, NOW))
+REPORT_WINDOW_SECONDS = 8 * 60
+REPORT_BORDER = NOW - REPORT_WINDOW_SECONDS
+TIMES = st.sampled_from((REPORT_BORDER - 1, REPORT_BORDER,
+                         REPORT_BORDER + 1, NOW))
 IPS = st.sampled_from(("127.0.0.1", "192.0.2.5", "::1", "a&b<c"))
 LOCALES = st.sampled_from(("ru-RU", "en-US", "日本語"))
 NUMBERS = st.text("0123456789", min_size=12, max_size=12)
@@ -37,8 +40,8 @@ class Machine(RuleBasedStateMachine):
     @initialize(ip=IPS, locale=LOCALES, number=NUMBERS)
     def seed(self, ip, locale, number):
         """Показать все маршруты для сгенерированных начальных данных."""
-        self.add_user(1, NOW - 480, ip, locale)
-        self.add_user(2, NOW - 481, ip, locale)
+        self.add_user(1, REPORT_BORDER, ip, locale)
+        self.add_user(2, REPORT_BORDER - 1, ip, locale)
         self.add_query(1, 1, NOW, number)
         self.add_query(2, 2, NOW, number)
         assert report_set(self.api.list_report()) == self.expected_report()
@@ -176,9 +179,9 @@ class Machine(RuleBasedStateMachine):
     def expected_report(self):
         """Проверить Recent и unmatched для готовых результатов."""
         triples = set()
-        for key, query in self.queries.items():
+        for query in self.queries.values():
             user = self.users[query["individual"]]
-            if NOW - user["created"] <= 480:
+            if user["created"] >= REPORT_BORDER:
                 fields = ("", user["ip"], query["argument"])
             else:
                 fields = ("", None, None)

@@ -50,19 +50,30 @@ def query_params(required, allowed):
 
 def filters(table):
     """Разобрать обязательный XML-элемент filter (пустой значит все)."""
+    root = _filter_root(request.get_data())
+    result = {}
+    for node in root:
+        _check_filter_field(node, FIELDS[table], result)
+        result[node.tag] = value_as(node.tag, node.text or "")
+    return result
+
+
+def _filter_root(data):
+    """Прочитать XML и проверить корневой элемент фильтра."""
     try:
-        root = ElementTree.fromstring(request.get_data())
+        root = ElementTree.fromstring(data)
     except (ParseError, DefusedXmlException) as error:
         raise ServiceError("Некорректный XML", 400) from error
     if root.tag != "filter" or root.attrib or (root.text or "").strip():
         raise ServiceError("Ожидается элемент <filter>", 400)
-    result = {}
-    for node in root:
-        if (node.tag not in FIELDS[table] or node.tag in result
-                or len(node) or node.attrib or (node.tail or "").strip()):
-            raise ServiceError("Некорректное поле XML-фильтра", 400)
-        result[node.tag] = value_as(node.tag, node.text or "")
-    return result
+    return root
+
+
+def _check_filter_field(node, allowed, used):
+    """Проверить имя, уникальность и структуру одного поля."""
+    if (node.tag not in allowed or node.tag in used
+            or len(node) or node.attrib or (node.tail or "").strip()):
+        raise ServiceError("Некорректное поле XML-фильтра", 400)
 
 
 def result_xml(table, rows):

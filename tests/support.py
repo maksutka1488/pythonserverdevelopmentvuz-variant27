@@ -32,7 +32,7 @@ class RunningServer:
         )
         self.thread = Thread(target=self.server.serve_forever, args=(0.01,))
         self.thread.start()
-        self.url = f"http://127.0.0.1:{self.server.server_port}"
+        self.url = "http://127.0.0.1:{}".format(self.server.server_port)
         self.client = ApiClient(self.url, "tester", "secret")
 
     def drain(self):

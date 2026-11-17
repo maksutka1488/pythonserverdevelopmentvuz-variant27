@@ -24,7 +24,8 @@ class ApiClient:
     def __init__(self, base_url, username, password, timeout=10):
         self.url = base_url.rstrip("/") + PREFIX
         self.timeout = timeout
-        token = b64encode(f"{username}:{password}".encode()).decode("ascii")
+        credentials = ":".join((username, password)).encode("utf-8")
+        token = b64encode(credentials).decode("ascii")
         self.headers = {"Authorization": f"Basic {token}"}
 
     def _request(self, method, path, params=None, body=None):
